@@ -16,9 +16,9 @@ The example below shows a very simple Celery task. Using the `shared_task` decor
 
 Required key work arguments:
 
-- `name`: Defines the name of the task. The plugin name should be used to stop any overlapping tasks.
-- `base`: Set the base class to bind with.
-- `bind`: Binds the function with the base class.
+- `name` (str): Defines the name of the task. The plugin name should be used to stop any overlapping tasks.
+- `base` (class): Set the base class to bind with.
+- `bind` (bool): Binds the function with the base class.
 
 When the task is bound to the base, it inherits functions for logging and reporting task status. It also overwrites the `run()` function in the base class with the code from your function.
 
