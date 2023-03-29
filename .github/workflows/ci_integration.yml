@@ -126,12 +126,13 @@ jobs:
     if: "github.event_name == 'push' && (github.ref == 'refs/heads/develop')"
     steps:
       - name: "Check out repository code"
-        uses: "actions/checkout@v2"
-      - name: "Trigger Read the Docs build"
-        uses: "readthedocs/actions@v2"
+        uses: actions/checkout@v2
+      - name: Trigger RTDs build
+        uses: dfm/rtds-action@v1
         with:
-          token: ${{ secrets.RTD_TOKEN }}
-          trigger: "true"
+          webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
+          webhook_token: ${{ secrets.RTDS_TOKEN }}
+          commit_ref: ${{ github.ref }}
     needs: [
       unittest,
     ]
