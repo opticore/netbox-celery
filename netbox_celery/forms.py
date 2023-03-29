@@ -19,7 +19,7 @@ from netbox_celery.choices import CeleryResultStatusChoices
 from netbox_celery.models import CeleryResult
 
 
-class CeleryTaskForm(BootstrapMixin, forms.Form):
+class CeleryTaskForm(forms.Form):
     """Base form for Celery tasks."""
 
     class Meta:
@@ -37,7 +37,7 @@ class CeleryTaskForm(BootstrapMixin, forms.Form):
         )
 
 
-class CeleryTaskBulkForm(BootstrapMixin, forms.Form):
+class CeleryTaskBulkForm(forms.Form):
     """Base form for bulk Celery tasks."""
 
     csv_file = forms.FileField(
