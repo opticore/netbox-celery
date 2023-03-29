@@ -8,7 +8,6 @@ from django.utils.translation import gettext as _
 from users.models import User
 from utilities.forms import (
     APISelectMultiple,
-    BootstrapMixin,
     DateTimePicker,
     DynamicModelMultipleChoiceField,
     MultipleChoiceField,
@@ -19,7 +18,7 @@ from netbox_celery.choices import CeleryResultStatusChoices
 from netbox_celery.models import CeleryResult
 
 
-class CeleryTaskForm(BootstrapMixin, forms.Form):
+class CeleryTaskForm(forms.Form):
     """Base form for Celery tasks."""
 
     class Meta:
@@ -37,7 +36,7 @@ class CeleryTaskForm(BootstrapMixin, forms.Form):
         )
 
 
-class CeleryTaskBulkForm(BootstrapMixin, forms.Form):
+class CeleryTaskBulkForm(forms.Form):
     """Base form for bulk Celery tasks."""
 
     csv_file = forms.FileField(
