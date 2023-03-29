@@ -1,0 +1,92 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+
+
+{% block controls %}
+    <div class="controls">
+        <div class="control-group">
+
+        </div>
+    </div>
+{% endblock controls %}
+
+{% block content %}
+    <style>
+        .config_line {
+            text-decoration: none !important;
+            float:left;
+            clear:left;
+        }
+    </style>
+    <div class="row">
+        <div class="col col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Details</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover attr-table">
+                        <tr>
+                            <th>User</th>
+                            <td>{{ object.user }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td class="{% if object.status == "pending" %}text-primary">Pending{% elif object.status == "errored" or object.status == "failed" %}text-danger">Failed{% elif object.status == "completed" %}text-success">Completed{% else %}text-primary">Pending{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Created</th>
+                            <td>{{ object.created }}</td>
+                        </tr>
+                        <tr>
+                            <th>Completed</th>
+                            <td>{{ object.completed }}</td>
+                        </tr>
+                        <tr>
+                            <th>Arguments</th>
+                            <td><pre>{{ object.args|json }}</pre></td>
+                        </tr>
+                        <tr>
+                            <th>Key Word Arguments</th>
+                            <td><pre>{{ object.kwargs|json }}</pre></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Result</h3>
+                </div>
+                <div class="card-body">
+                    <pre id='json_result'>{{ object.result|json }}</pre>
+                </div>
+            </div>
+        </div>
+        <div class="col col-md-8">
+            {% if log_main %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Main</h3>
+                    </div>
+                    <div class="card-body">
+                        <pre>
+                            {% for log in log_main %}<a class="config_line">{{ log }}</a>{% endfor %}
+                        </pre>
+                    </div>
+                </div>
+            {% endif %}
+            {% for group_name, logs in log_groups.items %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ group_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <pre>
+                            {% for log in logs %}<a class="config_line">{{ log }}</a>{% endfor %}
+                        </pre>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock content %}
