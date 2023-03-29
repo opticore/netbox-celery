@@ -18,6 +18,8 @@ invoke = "^2.0.0"
 pylint-django = "^2.5.3"
 bandit = "^1.7.5"
 pylint-celery = "^0.3"
+mkdocs = "^1.4.2"
+mkdocs-version-annotations = "^1.0.0"
 
 [tool.black]
 line-length = 120
