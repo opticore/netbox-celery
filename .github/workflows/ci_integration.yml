@@ -120,3 +120,18 @@ jobs:
       black,
       pylint,
     ]
+
+  trigger_rtd_build:
+    runs-on: "ubuntu-latest"
+    if: "github.event_name == 'push' && (github.ref == 'refs/heads/develop')"
+    steps:
+      - name: "Check out repository code"
+        uses: "actions/checkout@v2"
+      - name: "Trigger Read the Docs build"
+        uses: "readthedocs/actions@v2"
+        with:
+          token: ${{ secrets.RTD_TOKEN }}
+          trigger: "true"
+    needs: [
+      unittest,
+    ]
