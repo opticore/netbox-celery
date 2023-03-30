@@ -121,22 +121,15 @@ jobs:
   #     pylint,
   #   ]
 
-  trigger_rtd_build:
+  trigger_github_pages_build:
     runs-on: "ubuntu-latest"
     if: "github.event_name == 'push' && (github.ref == 'refs/heads/develop')"
     steps:
       - name: "Check out repository code"
         uses: actions/checkout@v2
-      - name: Declare some variables
-        id: vars
+      - name: mkdocs-gh-build
         shell: bash
-        run: echo "git_ref_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-      - name: Trigger RTDs build
-        uses: dfm/rtds-action@v1
-        with:
-          webhook_url: ${{ secrets.RTD_WEBHOOK_URL }}
-          webhook_token: ${{ secrets.RTD_TOKEN }}
-          commit_ref: ${{ github.ref }}
-    # needs: [
-    #   unittest,
-    # ]
+        run: mkdocs gh-deploy
+    needs: [
+      unittest,
+    ]
