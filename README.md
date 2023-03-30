@@ -4,7 +4,6 @@
   <img src="https://raw.githubusercontent.com/opticore/netbox-celery/main/docs/images/netbox_celery.png" class="logo" height="200px">
   <br>
   <a href="https://github.com/opticore/netbox-celery/actions"><img src="https://github.com/opticore/netbox-celery/actions/workflows/ci_integration.yml/badge.svg?branch=main"></a>
-  <a href=""><img src="https://readthedocs.org/projects/netbox-celery/badge/"></a>
   <a href="https://pypi.org/project/netbox-celery/"><img src="https://img.shields.io/pypi/v/netbox-celery"></a>
   <a href="https://pypi.org/project/netbox-celery/"><img src="https://img.shields.io/pypi/dm/netbox-celery"></a>
   <br>
