@@ -63,7 +63,15 @@ class CeleryBaseTask(Task):
 
 
 def netbox_celery_task(*args, base=CeleryBaseTask, bind=True, **kwargs):
-    """Netbox Celery Task."""
+    """Netbox Celery Task Decorator.
+
+    This decorator is used to set default values for the Celery task.
+
+    Args:
+        base (CeleryBaseTask): Base task class.
+        bind (bool): Bind task to instance.
+
+    """
 
     def _netbox_celery_task(*args, **kwargs):
         return shared_task(*args, **kwargs)
