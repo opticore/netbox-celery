@@ -41,7 +41,7 @@ celery -A netbox_celery worker -E -l INFO
 
  -------------- celery@opticore v5.2.7 (dawn-chorus)
 --- ***** -----
--- ******* ---- macOS-13.0-arm64-arm-64bit 2023-03-29 12:03:48
+-- ******* ---- macOS-13.0-arm64-arm-64bit 2023-03-29 12:03:47
 - *** --- * ---
 - ** ---------- [config]
 - ** ---------- .> app:         netbox_celery:0x10a1adf10
