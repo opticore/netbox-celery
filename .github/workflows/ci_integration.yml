@@ -138,7 +138,6 @@ jobs:
       - name: Install dependencies
         run: poetry install --only=dev
       - name: mkdocs-gh-build
-        shell: bash
         run: mkdocs gh-deploy
     # needs: [
     #   unittest,
