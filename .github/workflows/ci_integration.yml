@@ -137,6 +137,6 @@ jobs:
           webhook_url: ${{ secrets.RTD_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTD_TOKEN }}
           commit_ref: ${{ github.ref }}
-    needs: [
-      unittest,
-    ]
+    # needs: [
+    #   unittest,
+    # ]
