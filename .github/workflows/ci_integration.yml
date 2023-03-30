@@ -128,15 +128,15 @@ jobs:
       - name: "Check out repository code"
         uses: actions/checkout@v2
       - name: Declare some variables
-        id: git_ref_short
+        id: vars
         shell: bash
-        run: echo "$(git rev-parse --short HEAD)"
+        run: echo "git_ref_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Trigger RTDs build
         uses: dfm/rtds-action@v1
         with:
           webhook_url: ${{ secrets.RTD_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTD_TOKEN }}
-          commit_ref: ${{ steps.git_ref_short.outputs.stdout }}
+          commit_ref: ${{ steps.vars.outputs.git_ref_short }}
     needs: [
       unittest,
     ]
