@@ -130,6 +130,6 @@ jobs:
       - name: mkdocs-gh-build
         shell: bash
         run: mkdocs gh-deploy
-    needs: [
-      unittest,
-    ]
+    # needs: [
+    #   unittest,
+    # ]
