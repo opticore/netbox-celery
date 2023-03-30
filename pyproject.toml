@@ -24,6 +24,7 @@ mkdocs-include-markdown-plugin = "3.8"
 pymdown-extensions = "^9.10"
 mkdocs-material = "^9.1.4"
 mkdocstrings = "^0.20.0"
+example-plugin = { path = "docs/example-plugin", develop = true }
 
 [tool.black]
 line-length = 120

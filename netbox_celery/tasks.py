@@ -3,6 +3,7 @@ import logging
 
 from datetime import datetime
 from celery.app.task import Task
+from celery import shared_task
 
 from netbox_celery.choices import CeleryResultStatusChoices
 from netbox_celery.models import CeleryResult
@@ -59,3 +60,12 @@ class CeleryBaseTask(Task):
     def log(self, level_choice=logging.INFO, message=""):
         """Log message."""
         self.task_obj.log(level_choice, message)
+
+
+def netbox_celery_task(*args, base=CeleryBaseTask, bind=True, **kwargs):
+    """Netbox Celery Task."""
+
+    def _netbox_celery_task(*args, **kwargs):
+        return shared_task(*args, **kwargs)
+
+    return _netbox_celery_task(*args, base=base, bind=bind, **kwargs)
