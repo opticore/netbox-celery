@@ -127,6 +127,16 @@ jobs:
     steps:
       - name: "Check out repository code"
         uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Poetry
+        run: pip install poetry
+      - name: Configure Poetry
+        run: poetry config virtualenvs.create false
+      - name: Install dependencies
+        run: poetry install --only=dev
       - name: mkdocs-gh-build
         shell: bash
         run: mkdocs gh-deploy
