@@ -20,6 +20,9 @@ bandit = "^1.7.5"
 pylint-celery = "^0.3"
 mkdocs = "^1.4.2"
 mkdocs-version-annotations = "^1.0.0"
+mkdocs-include-markdown-plugin = "3.8"
+pymdown-extensions = "^9.10"
+mkdocs-material = "^9.1.4"
 
 [tool.black]
 line-length = 120
