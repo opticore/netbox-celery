@@ -137,6 +137,8 @@ jobs:
         run: poetry config virtualenvs.create false
       - name: Install dependencies
         run: poetry install --only=dev
+      - name: pull repo
+        run: git pull
       - name: mkdocs-gh-build
         run: mkdocs gh-deploy
     # needs: [
