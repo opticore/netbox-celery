@@ -57,7 +57,7 @@ class CeleryBaseTask(Task):
         self.task_obj = CeleryResult.objects.get(pk=primary_key)
         return self.task_obj
 
-    def log(self, level_choice=logging.INFO, message=""):
+    def log(self, message, level_choice=logging.INFO):
         """Log message."""
         self.task_obj.log(level_choice, message)
 
