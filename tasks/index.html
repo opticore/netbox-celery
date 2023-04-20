@@ -611,19 +611,16 @@
 <p>Required key work arguments:</p>
 <ul>
 <li><code>name</code> (str): Defines the name of the task. The plugin name should be used to stop any overlapping tasks.</li>
-<li><code>base</code> (class): Set the base class to bind with.</li>
-<li><code>bind</code> (bool): Binds the function with the base class.</li>
 </ul>
 <p>When the task is bound to the base, it inherits functions for logging and reporting task status. It also overwrites the <code>run()</code> function in the base class with the code from your function.</p>
 <p>Whenever <code>CeleryBaseTask</code> is used, the first argument in the celery function needs to be <code>task_id</code>. This allows the backend to retrieve the correct <code>CeleryResult</code> object from the ORM. Additional arguments can be added after <code>task_id</code> depending on the function.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Example script</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">celery</span> <span class="kn">import</span> <span class="n">shared_task</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span> <span class="nn">netbox_celery.tasks</span> <span class="kn">import</span> <span class="n">CeleryBaseTask</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">netbox_celery.tasks</span> <span class="kn">import</span> <span class="n">netbox_celery_task</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nd">@shared_task</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;netbox_example_plugin:hello_world&quot;</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">CeleryBaseTask</span><span class="p">,</span> <span class="n">bind</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_id</span><span class="p">):</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nd">@netbox_celery_task</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;example_plugin:hello_world&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_id</span><span class="p">):</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Example output</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>celery<span class="w"> </span>-A<span class="w"> </span>netbox_celery<span class="w"> </span>worker<span class="w"> </span>-E<span class="w"> </span>-l<span class="w"> </span>INFO
