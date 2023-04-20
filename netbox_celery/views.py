@@ -11,12 +11,7 @@ from netbox_celery.tables import CeleryResultTable
 from utilities.exceptions import AbortRequest, PermissionsViolation
 from utilities.forms import restrict_form_fields
 
-from netbox.views.generic import (
-    ObjectDeleteView,
-    ObjectEditView,
-    ObjectListView,
-    ObjectView
-)
+from netbox.views.generic import ObjectDeleteView, ObjectEditView, ObjectListView, ObjectView
 
 
 class CeleryResultListView(ObjectListView):
@@ -104,10 +99,7 @@ class CeleryTaskAddView(ObjectEditView):
                 else:
                     messages.success(request, "Job successfully queued.")
 
-                return redirect(
-                    "plugins:netbox_celery:celeryresult_view",
-                    pk=obj.pk
-                    )
+                return redirect("plugins:netbox_celery:celeryresult_view", pk=obj.pk)
 
             except (AbortRequest, PermissionsViolation) as error:
                 logger.debug(error.message)

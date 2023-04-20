@@ -27,24 +27,24 @@ class CeleryResultSerializer(NetBoxModelSerializer):
 
 
 class ResultLogSerializer(serializers.ModelSerializer):
-    username = serializers.ReadOnlyField(source='job_result.user.username')
-    status = serializers.ReadOnlyField(source='job_result.status')
-    result_created = serializers.ReadOnlyField(source='job_result.created')
-    result_completed = serializers.ReadOnlyField(source='job_result.completed')
+    username = serializers.ReadOnlyField(source="job_result.user.username")
+    status = serializers.ReadOnlyField(source="job_result.status")
+    result_created = serializers.ReadOnlyField(source="job_result.created")
+    result_completed = serializers.ReadOnlyField(source="job_result.completed")
 
     class Meta:
         model = CeleryLogEntry
         fields = [
-            'username',
-            'status',
-            'result_created',
-            'result_completed',
-            'job_result',
-            'log_level',
-            'grouping',
-            'message',
-            'created',
+            "username",
+            "status",
+            "result_created",
+            "result_completed",
+            "job_result",
+            "log_level",
+            "grouping",
+            "message",
+            "created",
         ]
 
     def get_queryset(self):
-        return super().get_queryset().select_related('job_result__user')
+        return super().get_queryset().select_related("job_result__user")

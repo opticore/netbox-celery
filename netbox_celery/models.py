@@ -8,10 +8,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from netbox_celery.choices import (
-    CeleryResultStatusChoices,
-    LogLevelIntegerChoices
-)
+from netbox_celery.choices import CeleryResultStatusChoices, LogLevelIntegerChoices
 from users.models import User
 from utilities.querysets import RestrictedQuerySet
 
@@ -42,12 +39,7 @@ class CeleryResult(NetBoxModel):
     celery_name = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
     completed = models.DateTimeField(null=True, blank=True)
-    user = models.ForeignKey(
-        User, on_delete=models.SET_NULL,
-        related_name="+",
-        blank=True,
-        null=True
-        )
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="+", blank=True, null=True)
     status = models.CharField(
         max_length=30,
         choices=CeleryResultStatusChoices,
@@ -55,10 +47,7 @@ class CeleryResult(NetBoxModel):
     )
     args = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)
     kwargs = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)
-    job_kwargs = models.JSONField(
-        blank=True, null=True,
-        encoder=DjangoJSONEncoder
-        )
+    job_kwargs = models.JSONField(blank=True, null=True, encoder=DjangoJSONEncoder)
     result = models.JSONField(blank=True, null=True, encoder=DjangoJSONEncoder)
 
     objects = RestrictedQuerySet.as_manager()
@@ -76,10 +65,7 @@ class CeleryResult(NetBoxModel):
 
     def get_absolute_url(self):
         """Get absolute url."""
-        return reverse(
-            "plugins:netbox_celery:celeryresult_view",
-            kwargs={"pk": self.pk}
-            )
+        return reverse("plugins:netbox_celery:celeryresult_view", kwargs={"pk": self.pk})
 
     @classmethod
     def enqueue_job(  # pylint: disable=dangerous-default-value
@@ -157,11 +143,7 @@ class CeleryResult(NetBoxModel):
 class CeleryLogEntry(models.Model):
     """Stores each log entry for the CeleryResult."""
 
-    job_result = models.ForeignKey(
-        CeleryResult,
-        on_delete=models.CASCADE,
-        related_name="logs"
-    )
+    job_result = models.ForeignKey(CeleryResult, on_delete=models.CASCADE, related_name="logs")
 
     log_level = models.CharField(
         max_length=32,

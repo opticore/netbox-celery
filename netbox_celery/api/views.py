@@ -2,10 +2,7 @@
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from netbox_celery.api.serializers import (
-    CeleryResultSerializer,
-    ResultLogSerializer
-)
+from netbox_celery.api.serializers import CeleryResultSerializer, ResultLogSerializer
 from netbox_celery.filtersets import CeleryResultFilterSet
 from netbox_celery.models import CeleryResult, CeleryLogEntry
 
@@ -29,12 +26,9 @@ class ResultLogViewSet(ReadOnlyModelViewSet):
     serializer_class = ResultLogSerializer
 
     def retrieve(self, request, pk=None):
-        latest = self.request.query_params.get('latest')
+        latest = self.request.query_params.get("latest")
         if latest:
-            log = CeleryLogEntry.objects.filter(
-                job_result=pk,
-                created__gt=latest
-                )
+            log = CeleryLogEntry.objects.filter(job_result=pk, created__gt=latest)
         else:
             log = CeleryLogEntry.objects.filter(job_result=pk)
         serializer = self.get_serializer(log, many=True)
