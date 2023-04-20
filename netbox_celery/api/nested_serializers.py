@@ -1,3 +1,4 @@
+"""Netbox Celery API nested serializers."""
 from netbox.api.serializers import NetBoxModelSerializer
 
 from netbox_celery.models import CeleryLogEntry

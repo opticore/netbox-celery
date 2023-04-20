@@ -8,8 +8,6 @@ from netbox_celery.models import CeleryResult
 class CeleryResultSerializer(NetBoxModelSerializer):
     """CeleryResult serializer."""
 
-    logs = NestedCeleryLogEntrySerializer(many=True, read_only=True)
-
     class Meta:
         """Meta Class."""
 
@@ -27,3 +25,14 @@ class CeleryResultSerializer(NetBoxModelSerializer):
             "result",
             "logs",
         ]
+
+    def to_representation(self, instance):
+        logs = self.context.get('logs')
+        logs_after = NestedCeleryLogEntrySerializer(
+            logs,
+            many=True,
+            read_only=True
+            ).data
+        representation = super().to_representation(instance)
+        representation['logs'] = logs_after
+        return representation
