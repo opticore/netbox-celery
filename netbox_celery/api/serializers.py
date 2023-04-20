@@ -27,6 +27,7 @@ class CeleryResultSerializer(NetBoxModelSerializer):
 
 
 class ResultLogSerializer(serializers.ModelSerializer):
+    """ResultLog serializer."""
     username = serializers.ReadOnlyField(source="job_result.user.username")
     status = serializers.ReadOnlyField(source="job_result.status")
     result_created = serializers.ReadOnlyField(source="job_result.created")
@@ -46,5 +47,6 @@ class ResultLogSerializer(serializers.ModelSerializer):
             "created",
         ]
 
-    def get_queryset(self):
-        return super().get_queryset().select_related("job_result__user")
+    def get_queryset(self, request):
+        """Get queryset."""
+        return CeleryLogEntry.objects.select_related("job_result__user")

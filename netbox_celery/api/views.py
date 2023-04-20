@@ -26,11 +26,12 @@ class CeleryResultView(NetBoxModelViewSet):
 
 class ResultLogViewSet(ReadOnlyModelViewSet):
     """ResultLog ViewSet."""
+
     queryset = CeleryLogEntry.objects.all()
     serializer_class = ResultLogSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        job_result = kwargs['pk']
+        job_result = kwargs["pk"]
         latest = self.request.query_params.get("latest")
         if latest:
             log = CeleryLogEntry.objects.filter(
