@@ -6,6 +6,5 @@ menu_items = (
     PluginMenuItem(
         link="plugins:example_plugin:example_add",
         link_text="Example Task",
-        permissions=["example_plugin.example"],
     ),
 )
