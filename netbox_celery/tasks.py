@@ -3,6 +3,7 @@ import logging
 
 from datetime import datetime
 from celery.app.task import Task
+from celery import shared_task
 
 from netbox_celery.choices import CeleryResultStatusChoices
 from netbox_celery.models import CeleryResult
@@ -56,6 +57,20 @@ class CeleryBaseTask(Task):
         self.task_obj = CeleryResult.objects.get(pk=primary_key)
         return self.task_obj
 
-    def log(self, level_choice=logging.INFO, message=""):
+    def log(self, message, level_choice=logging.INFO):
         """Log message."""
         self.task_obj.log(level_choice, message)
+
+
+def netbox_celery_task(*args, base=CeleryBaseTask, bind=True, **kwargs):
+    """Netbox Celery Task Decorator.
+
+    This decorator is used to set default values for the Celery task.
+
+    Args:
+        base (CeleryBaseTask): Base task class.
+        bind (bool): Bind task to instance.
+    Returns:
+        shared_task: Shared task.
+    """
+    return shared_task(*args, base=base, bind=bind, **kwargs)
