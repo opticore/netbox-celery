@@ -70,10 +70,7 @@ def netbox_celery_task(*args, base=CeleryBaseTask, bind=True, **kwargs):
     Args:
         base (CeleryBaseTask): Base task class.
         bind (bool): Bind task to instance.
-
+    Returns:
+        shared_task: Shared task.
     """
-
-    def _netbox_celery_task(*args, **kwargs):
-        return shared_task(*args, **kwargs)
-
-    return _netbox_celery_task(*args, base=base, bind=bind, **kwargs)
+    return shared_task(*args, base=base, bind=bind, **kwargs)
