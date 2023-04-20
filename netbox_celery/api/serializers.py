@@ -1,12 +1,14 @@
 """Netbox Celery API serializers."""
-from rest_framework import serializers
-from netbox_celery.models import CeleryResult, CeleryLogEntry
-
 from netbox.api.serializers import NetBoxModelSerializer
+
+from netbox_celery.api.nested_serializers import NestedCeleryLogEntrySerializer
+from netbox_celery.models import CeleryResult
 
 
 class CeleryResultSerializer(NetBoxModelSerializer):
     """CeleryResult serializer."""
+
+    logs = NestedCeleryLogEntrySerializer(many=True, read_only=True)
 
     class Meta:
         """Meta Class."""
@@ -23,31 +25,5 @@ class CeleryResultSerializer(NetBoxModelSerializer):
             "kwargs",
             "job_kwargs",
             "result",
+            "logs",
         ]
-
-
-class ResultLogSerializer(serializers.ModelSerializer):
-    """ResultLog serializer."""
-
-    username = serializers.ReadOnlyField(source="job_result.user.username")
-    status = serializers.ReadOnlyField(source="job_result.status")
-    result_created = serializers.ReadOnlyField(source="job_result.created")
-    result_completed = serializers.ReadOnlyField(source="job_result.completed")
-
-    class Meta:
-        model = CeleryLogEntry
-        fields = [
-            "username",
-            "status",
-            "result_created",
-            "result_completed",
-            "job_result",
-            "log_level",
-            "grouping",
-            "message",
-            "created",
-        ]
-
-    def get_queryset(self, request):
-        """Get queryset."""
-        return CeleryLogEntry.objects.select_related("job_result__user")
