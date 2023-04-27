@@ -23,9 +23,9 @@ Example:
 from netbox_celery.models import CeleryResult
 
 job = CeleryResult.enqueue_job(
-    "example_plugin:example_job",       # Name/Path of celery function
+    "example_plugin:hello_world",       # Name/Path of celery function
     user=None,                          # User who initiated the job
-    celery_kwargs={"countdown": 10},    # kwargs that are passed into `apply_async`
+    celery_kwargs={"countdown": 2},    # kwargs that are passed into `apply_async`
     args=[],                            # args that are passed into celery task function
     kwargs=[],                          # kwargs that are passed into celery task function
 )

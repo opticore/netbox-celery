@@ -16,9 +16,7 @@ The example below shows a very simple Celery task. Using the `shared_task` decor
 
 Required key work arguments:
 
-- `name`: Defines the name of the task. The plugin name should be used to stop any overlapping tasks.
-- `base`: Set the base class to bind with.
-- `bind`: Binds the function with the base class.
+- `name` (str): Defines the name of the task. The plugin name should be used to stop any overlapping tasks.
 
 When the task is bound to the base, it inherits functions for logging and reporting task status. It also overwrites the `run()` function in the base class with the code from your function.
 
@@ -26,11 +24,10 @@ Whenever `CeleryBaseTask` is used, the first argument in the celery function nee
 
 ``` python
 # Example script
-from celery import shared_task
-from netbox_celery.tasks import CeleryBaseTask
+from netbox_celery.tasks import netbox_celery_task
 
 
-@shared_task(name="netbox_example_plugin:hello_world", base=CeleryBaseTask, bind=True)
+@netbox_celery_task(name="example_plugin:hello_world")
 def hello_world(self, task_id):
     self.log("Hello World!")
 ```

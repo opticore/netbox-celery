@@ -30,7 +30,7 @@ class CeleryTaskForm(forms.Form):
     def save(self, request):
         """Save the form."""
         return CeleryResult.enqueue_job(
-            self.task_name,
+            self.Meta.task_name,
             user=request.user,
             kwargs=self.cleaned_data,
         )
