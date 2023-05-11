@@ -1,13 +1,11 @@
 """Celery result view."""
 import datetime
 
-from django.conf import settings
-
 from rest_framework.response import Response
 
 from netbox_celery.api.serializers import CeleryResultSerializer
 from netbox_celery.filtersets import CeleryResultFilterSet
-from netbox_celery.models import CeleryResult, CeleryLogEntry
+from netbox_celery.models import CeleryResult
 
 from netbox.api.viewsets import NetBoxModelViewSet
 
