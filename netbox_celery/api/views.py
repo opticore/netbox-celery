@@ -20,7 +20,7 @@ class CeleryResultView(NetBoxModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         job_result = kwargs.get("pk")
         celery_result = self.get_object()
-        logs_after = self.request.query_params.get("logsAfter")
+        logs_after = self.request.query_params.get("logs_after")
         logs_after_datetime = None
         if logs_after:
             logs_after_datetime = datetime.datetime.strptime(logs_after, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
