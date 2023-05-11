@@ -128,10 +128,10 @@
     // Declare variables
     let baseurl = "/api/plugins/celery/result/";
     let latestLogTimestamp = "";
-    let lastStatus = "Unknown";
-    let taskResultStatusColours = {
-        'Pending': 'text-primary',
-        'Running': 'text-cyan',
+    let lastStatus = "unknown";
+    let taskDetailsStatusColours = {
+        'pending': 'text-primary',
+        'running': 'text-cyan',
         'completed': 'text-success',
         'errored': 'text-danger',
         'failed': 'text-danger'
@@ -145,6 +145,7 @@
         "0": "text-gray",
         "10": "text-gray",
         "20": "text-cyan",
+        "25": "text-green",
         "30": "text-yellow",
         "40": "text-yellow",
         "50": "text-red"
@@ -158,6 +159,24 @@
         "failed": false,
     }
 
+    function generateResultMarkup(result) {
+        let resultMarkup = '';
+
+        for (const [device, deviceResult] of Object.entries(result)) {
+            let deviceError = deviceResult.error !== null ? deviceResult.error.trim() : 'Success';
+            let errorColorClass = deviceResult.status ? 'text-success' : 'text-danger';
+
+            resultMarkup += `
+                <tr>
+                    <td style="width: 240px;">${device}</td>
+                    <td class="${errorColorClass}">${deviceError}</td>
+                </tr>
+            `;
+            }
+
+        return resultMarkup;
+        }
+
     function groupLogs(logs) {
         let logGroups = {};
         logs.forEach(log => {
@@ -169,10 +188,11 @@
         return logGroups;
     }
 
-    function createLogGroupTables(logGroups) {
-        let logGroupMarkup = '';
-        for (const [group, logs] of Object.entries(logGroups)) {
-            logGroupMarkup += `
+function createLogGroupTables(logGroups) {
+    let logGroupMarkup = '';
+    const logGroupEntries = Object.entries(logGroups).reverse();
+    for (const [group, logs] of logGroupEntries) {
+        logGroupMarkup += `
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">${group}</h3>
@@ -180,17 +200,17 @@
                 <div class="card-body">
                     <table class="table table-fixed">
                         <tbody>`;
-            logs.forEach(log => {
-                logGroupMarkup += `<tr><td class="${taskLogLevelColours[log.log_level]}">${log.message.replace(/</g, '').replace(/>/g, '')}</td></tr>`;
-            });
-            logGroupMarkup += `
+        logs.forEach(log => {
+            logGroupMarkup += `<tr><td class="${taskLogLevelColours[log.log_level]}">${log.message.replace(/</g, '').replace(/>/g, '')}</td></tr>`;
+        });
+        logGroupMarkup += `
                         </tbody>
                     </table>
                 </div>
             </div>`;
-        }
-        return logGroupMarkup;
     }
+    return logGroupMarkup;
+}
 
     // Start when ready
     document.addEventListener("DOMContentLoaded", function() {
@@ -203,7 +223,6 @@
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                let resultMarkup = "";
                 let $showTaskDetails = document.getElementById('tableTaskDetails').getElementsByTagName('tbody')[0];
 
                 // Task Details
@@ -216,7 +235,7 @@
                 </tr>
                 <tr>
                     <th>Status</th>
-                    <td class="${taskResultStatusColours[data.status]}">${data.status}</td>
+                    <td class="${taskDetailsStatusColours[data.status]}">${data.status}</td>
                 </tr>
                 <tr>
                     <th>Created</th>
@@ -231,15 +250,52 @@
                 // Task Log
                 if (data.logs && data.logs.length > 0) {
                     let logGroups = groupLogs(data.logs);
-                    let logGroupMarkup = createLogGroupTables(logGroups);
-                    document.getElementById('logGroups').innerHTML = logGroupMarkup;
+
+                    for (const [group, logs] of Object.entries(logGroups)) {
+                        let existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+
+                        if (!existingCard) {
+                            let logGroupMarkup = `
+                            <div class="card" data-group="${group}">
+                                <div class="card-header">
+                                    <h3 class="card-title">${group}</h3>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-fixed">
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>`;
+
+                            document.getElementById('logGroups').innerHTML += logGroupMarkup;
+                            existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+                        }
+
+                        let existingTbody = existingCard.querySelector('tbody');
+
+                        logs.forEach(log => {
+                            let newRow = document.createElement('tr');
+                            let newCell = document.createElement('td');
+                            newCell.className = taskLogLevelColours[log.log_level];
+                            newCell.textContent = log.message.replace(/</g, '').replace(/>/g, '');
+                            newRow.appendChild(newCell);
+                            existingTbody.appendChild(newRow);
+                        });
+                    }
+                }
+
+                // Task Result
+                if (data.result) {
+                    let $showTaskResult = document.getElementById('tableTaskResult').getElementsByTagName('tbody')[0];
+                    let resultMarkup = generateResultMarkup(data.result);
+                    $showTaskResult.innerHTML = resultMarkup;
                 }
 
                 // Latest state
                 if (data.logs && data.logs.length > 0) {
                     latestLogTimestamp = data.logs[data.logs.length - 1].created;
                 }
-
 
                 lastStatus = data.status;
 
@@ -248,7 +304,8 @@
                     setTimeout(function () { reloadTable(jobResultId, latest); }, 1000);
                 }
         });
-    };
+    }
+
 </script>
 
 
