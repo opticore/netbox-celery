@@ -18,6 +18,7 @@
             clear:left;
         }
     </style>
+<a name="ORIGINAL"></a>
     <div class="row">
         <div class="col col-md-4">
             <div class="card">
@@ -89,4 +90,166 @@
             {% endfor %}
         </div>
     </div>
+
+    <a name="NEW"></a>
+    <div class="row">
+        <div class="col col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Details</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-fixed" id="tableTaskDetails">
+                        <tbody id="tableTaskResultBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Result</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-fixed" id="tableTaskResult">
+                        <tbody id="tableTaskResultBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col col-md-8">
+            <div id="logGroups">
+            </div>
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script>
+    // Declare variables
+    let baseurl = "/api/plugins/celery/result/";
+    let latestLogTimestamp = "";
+    let lastStatus = "Unknown";
+    let taskResultStatusColours = {
+        'Pending': 'text-primary',
+        'Running': 'text-cyan',
+        'completed': 'text-success',
+        'errored': 'text-danger',
+        'failed': 'text-danger'
+    };
+    let taskLogLevelColours = {
+        "default": "text-gray",
+        "success": "text-green",
+        "info": "text-cyan",
+        "warning": "text-yellow",
+        "failure": "text-red",
+        "0": "text-gray",
+        "10": "text-gray",
+        "20": "text-cyan",
+        "30": "text-yellow",
+        "40": "text-yellow",
+        "50": "text-red"
+    };
+    let restartTimer = {
+        "unknown": true,
+        "pending": true,
+        "running": true,
+        "completed": false,
+        "errored": false,
+        "failed": false,
+    }
+
+    function groupLogs(logs) {
+        let logGroups = {};
+        logs.forEach(log => {
+            if (!logGroups.hasOwnProperty(log.grouping)) {
+                logGroups[log.grouping] = [];
+            }
+            logGroups[log.grouping].push(log);
+        });
+        return logGroups;
+    }
+
+    function createLogGroupTables(logGroups) {
+        let logGroupMarkup = '';
+        for (const [group, logs] of Object.entries(logGroups)) {
+            logGroupMarkup += `
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">${group}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-fixed">
+                        <tbody>`;
+            logs.forEach(log => {
+                logGroupMarkup += `<tr><td class="${taskLogLevelColours[log.log_level]}">${log.message.replace(/</g, '').replace(/>/g, '')}</td></tr>`;
+            });
+            logGroupMarkup += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+        return logGroupMarkup;
+    }
+
+    // Start when ready
+    document.addEventListener("DOMContentLoaded", function() {
+        var jobResultId = "{{ object.id }}";
+        reloadTable(jobResultId);
+    });
+
+    function reloadTable(jobResultId, latest) {
+        var url = baseurl + jobResultId + "/?logs_after=" + latestLogTimestamp;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let resultMarkup = "";
+                let $showTaskDetails = document.getElementById('tableTaskDetails').getElementsByTagName('tbody')[0];
+
+                // Task Details
+                detailsCreated = new Date(data.created).toUTCString();
+                detailsCompleted = data.completed ? new Date(data.completed).toUTCString() : "";
+                detailsMarkup = `
+                <tr>
+                    <th>User</th>
+                    <td>${data.user}</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td class="${taskResultStatusColours[data.status]}">${data.status}</td>
+                </tr>
+                <tr>
+                    <th>Created</th>
+                    <td>${detailsCreated}</td>
+                </tr>
+                <tr>
+                    <th>Completed</th>
+                    <td>${detailsCompleted}</td>
+                </tr>`;
+                $showTaskDetails.innerHTML = detailsMarkup;
+
+                // Task Log
+                if (data.logs && data.logs.length > 0) {
+                    let logGroups = groupLogs(data.logs);
+                    let logGroupMarkup = createLogGroupTables(logGroups);
+                    document.getElementById('logGroups').innerHTML = logGroupMarkup;
+                }
+
+                // Latest state
+                if (data.logs && data.logs.length > 0) {
+                    latestLogTimestamp = data.logs[data.logs.length - 1].created;
+                }
+
+
+                lastStatus = data.status;
+
+                // Restart timer as required
+                if (restartTimer[lastStatus]) {
+                    setTimeout(function () { reloadTable(jobResultId, latest); }, 1000);
+                }
+        });
+    };
+</script>
+
+
 {% endblock content %}
