@@ -150,6 +150,7 @@
         'errored': 'text-danger',
         'failed': 'text-danger'
     };
+
     let taskLogLevelColours = {
         "default": "text-gray",
         "success": "text-green",
@@ -164,6 +165,7 @@
         "40": "text-yellow",
         "50": "text-red"
     };
+
     let restartTimer = {
         "unknown": true,
         "pending": true,
@@ -176,6 +178,7 @@
     function generateTaskDetailsMarkup(data) {
         let detailsCreated = new Date(data.created).toUTCString();
         let detailsCompleted = data.completed ? new Date(data.completed).toUTCString() : "";
+        let statusCapitalized = data.status.charAt(0).toUpperCase() + data.status.slice(1);
 
         let detailsMarkup = `
             <tr>
@@ -184,7 +187,7 @@
             </tr>
             <tr>
                 <th>Status</th>
-                <td class="${taskDetailsStatusColours[data.status]} second-col">${data.status}</td>
+                <td class="${taskDetailsStatusColours[data.status]} second-col">${statusCapitalized}</td>
             </tr>
             <tr>
                 <th>Created</th>
