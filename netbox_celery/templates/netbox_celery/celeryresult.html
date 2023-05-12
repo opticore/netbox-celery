@@ -14,8 +14,15 @@
     <style>
         .config_line {
             text-decoration: none !important;
+            border-bottom: none !important;
             float:left;
             clear:left;
+        }
+        pre {
+            border-bottom: none !important;
+        }
+        .second-col {
+            width: 70%;
         }
     </style>
 <a name="ORIGINAL"></a>
@@ -92,6 +99,15 @@
     </div>
 
     <a name="NEW"></a>
+    <style>
+        .config_line {
+            text-decoration: none !important;
+            border-bottom: none !important;
+            float: left;
+            clear: left;
+        }
+    </style>
+
     <div class="row">
         <div class="col col-md-4">
             <div class="card">
@@ -100,8 +116,7 @@
                 </div>
                 <div class="card-body">
                     <table class="table table-fixed" id="tableTaskDetails">
-                        <tbody id="tableTaskResultBody">
-                        </tbody>
+                        <tbody id="tableTaskResultBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -111,20 +126,19 @@
                 </div>
                 <div class="card-body">
                     <table class="table table-fixed" id="tableTaskResult">
-                        <tbody id="tableTaskResultBody">
-                        </tbody>
+                        <tbody id="tableTaskResultBody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
         <div class="col col-md-8">
-            <div id="logGroups">
-            </div>
+            <div id="logGroups"></div>
         </div>
     </div>
 
 <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script>
+
     // Declare variables
     let baseurl = "/api/plugins/celery/result/";
     let latestLogTimestamp = "";
@@ -159,6 +173,31 @@
         "failed": false,
     }
 
+    function generateTaskDetailsMarkup(data) {
+        let detailsCreated = new Date(data.created).toUTCString();
+        let detailsCompleted = data.completed ? new Date(data.completed).toUTCString() : "";
+
+        let detailsMarkup = `
+            <tr>
+                <th>User</th>
+                <td class="second-col">${data.user}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td class="${taskDetailsStatusColours[data.status]} second-col">${data.status}</td>
+            </tr>
+            <tr>
+                <th>Created</th>
+                <td class="second-col">${detailsCreated}</td>
+            </tr>
+            <tr>
+                <th>Completed</th>
+                <td class="second-col">${detailsCompleted}</td>
+            </tr>`;
+
+        return detailsMarkup;
+    }
+
     function generateResultMarkup(result) {
         let resultMarkup = '';
 
@@ -168,14 +207,48 @@
 
             resultMarkup += `
                 <tr>
-                    <td style="width: 240px;">${device}</td>
-                    <td class="${errorColorClass}">${deviceError}</td>
+                    <th>${device}</th>
+                    <td class="${errorColorClass} second-col">${deviceError}</td>
                 </tr>
             `;
             }
 
         return resultMarkup;
+    }
+
+    function updateTaskLog(logGroups) {
+        for (const [group, logs] of Object.entries(logGroups)) {
+            let existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+
+            if (!existingCard) {
+                let logGroupMarkup = `
+                    <div class="card" data-group="${group}">
+                        <div class="card-header">
+                            <h3 class="card-title">${group}</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-fixed">
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                document.getElementById('logGroups').innerHTML += logGroupMarkup;
+                existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+            }
+
+            let existingTbody = existingCard.querySelector('tbody');
+
+            logs.forEach(log => {
+                let newRow = document.createElement('tr');
+                let newCell = document.createElement('td');
+                newCell.className = taskLogLevelColours[log.log_level] + " config_line";
+                newCell.textContent = log.message.replace(/</g, '').replace(/>/g, '');
+                newRow.appendChild(newCell);
+                existingTbody.appendChild(newRow);
+            });
         }
+    }
 
     function groupLogs(logs) {
         let logGroups = {};
@@ -188,30 +261,6 @@
         return logGroups;
     }
 
-function createLogGroupTables(logGroups) {
-    let logGroupMarkup = '';
-    const logGroupEntries = Object.entries(logGroups).reverse();
-    for (const [group, logs] of logGroupEntries) {
-        logGroupMarkup += `
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">${group}</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-fixed">
-                        <tbody>`;
-        logs.forEach(log => {
-            logGroupMarkup += `<tr><td class="${taskLogLevelColours[log.log_level]}">${log.message.replace(/</g, '').replace(/>/g, '')}</td></tr>`;
-        });
-        logGroupMarkup += `
-                        </tbody>
-                    </table>
-                </div>
-            </div>`;
-    }
-    return logGroupMarkup;
-}
-
     // Start when ready
     document.addEventListener("DOMContentLoaded", function() {
         var jobResultId = "{{ object.id }}";
@@ -223,67 +272,12 @@ function createLogGroupTables(logGroups) {
         fetch(url)
             .then(response => response.json())
             .then(data => {
+
                 let $showTaskDetails = document.getElementById('tableTaskDetails').getElementsByTagName('tbody')[0];
 
                 // Task Details
-                detailsCreated = new Date(data.created).toUTCString();
-                detailsCompleted = data.completed ? new Date(data.completed).toUTCString() : "";
-                detailsMarkup = `
-                <tr>
-                    <th>User</th>
-                    <td>${data.user}</td>
-                </tr>
-                <tr>
-                    <th>Status</th>
-                    <td class="${taskDetailsStatusColours[data.status]}">${data.status}</td>
-                </tr>
-                <tr>
-                    <th>Created</th>
-                    <td>${detailsCreated}</td>
-                </tr>
-                <tr>
-                    <th>Completed</th>
-                    <td>${detailsCompleted}</td>
-                </tr>`;
+                let detailsMarkup = generateTaskDetailsMarkup(data);
                 $showTaskDetails.innerHTML = detailsMarkup;
-
-                // Task Log
-                if (data.logs && data.logs.length > 0) {
-                    let logGroups = groupLogs(data.logs);
-
-                    for (const [group, logs] of Object.entries(logGroups)) {
-                        let existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
-
-                        if (!existingCard) {
-                            let logGroupMarkup = `
-                            <div class="card" data-group="${group}">
-                                <div class="card-header">
-                                    <h3 class="card-title">${group}</h3>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table table-fixed">
-                                        <tbody>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>`;
-
-                            document.getElementById('logGroups').innerHTML += logGroupMarkup;
-                            existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
-                        }
-
-                        let existingTbody = existingCard.querySelector('tbody');
-
-                        logs.forEach(log => {
-                            let newRow = document.createElement('tr');
-                            let newCell = document.createElement('td');
-                            newCell.className = taskLogLevelColours[log.log_level];
-                            newCell.textContent = log.message.replace(/</g, '').replace(/>/g, '');
-                            newRow.appendChild(newCell);
-                            existingTbody.appendChild(newRow);
-                        });
-                    }
-                }
 
                 // Task Result
                 if (data.result) {
@@ -292,11 +286,16 @@ function createLogGroupTables(logGroups) {
                     $showTaskResult.innerHTML = resultMarkup;
                 }
 
+                // Task Log
+                if (data.logs && data.logs.length > 0) {
+                    let logGroups = groupLogs(data.logs);
+                    updateTaskLog(logGroups);
+                }
+
                 // Latest state
                 if (data.logs && data.logs.length > 0) {
                     latestLogTimestamp = data.logs[data.logs.length - 1].created;
                 }
-
                 lastStatus = data.status;
 
                 // Restart timer as required
