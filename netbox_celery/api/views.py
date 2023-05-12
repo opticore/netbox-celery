@@ -21,7 +21,10 @@ class CeleryResultView(NetBoxModelViewSet):
         celery_result = self.get_object()
         logs_after = self.request.query_params.get("logs_after", None)
         if logs_after:
-            logs_after_datetime = datetime.datetime.strptime(logs_after, "%Y-%m-%dT%H:%M:%S.%fZ")
+            logs_after_datetime = datetime.datetime.strptime(
+                logs_after,
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+                )
             logs = celery_result.logs.filter(created__gt=logs_after_datetime)
         else:
             logs = celery_result.logs.all()
