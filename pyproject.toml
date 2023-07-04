@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "netbox-celery"
-version = "0.1.1-beta3"
+version = "0.1.1-beta6"
 description = ""
 authors = ["OpticoreIT <opensource@opticoreit.com>"]
 readme = "README.md"
