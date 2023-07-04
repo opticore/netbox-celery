@@ -6,12 +6,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from users.models import User
-from utilities.forms import (
-    APISelectMultiple,
-    DateTimePicker,
-    DynamicModelMultipleChoiceField,
-    MultipleChoiceField,
-)
+from utilities.forms.widgets import APISelectMultiple, DateTimePicker
+from utilities.forms.fields import DynamicModelMultipleChoiceField, MultipleChoiceField
 
 from netbox.forms import NetBoxModelFilterSetForm
 from netbox_celery.choices import CeleryResultStatusChoices
@@ -27,12 +23,16 @@ class CeleryTaskForm(forms.Form):
         fields = ()
         task_name = None
 
+    def data_to_kwargs(self, data):
+        """Convert the data to kwargs."""
+        return data
+
     def save(self, request):
         """Save the form."""
         return CeleryResult.enqueue_job(
             self.Meta.task_name,
             user=request.user,
-            kwargs=self.cleaned_data,
+            kwargs=self.data_to_kwargs(self.cleaned_data),
         )
 
 
@@ -83,7 +83,7 @@ class CeleryTaskBulkForm(forms.Form):
 
     def data_to_kwargs(self, data):
         """Convert the data to kwargs."""
-        raise NotImplementedError
+        return data
 
     def save(self, request):
         """Save the form."""
