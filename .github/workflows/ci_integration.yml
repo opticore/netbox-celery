@@ -55,6 +55,7 @@ jobs:
     runs-on: "ubuntu-20.04"
     env:
       INVOKE_NETBOX_LOCAL: "True"
+      SECRET_KEY: "11111111111111111111111111111111111111111111111111111111111111111111111111111"
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
