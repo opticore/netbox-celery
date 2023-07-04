@@ -1,5 +1,6 @@
 {% extends 'generic/object.html' %}
 {% load helpers %}
+{% load static %}
 
 
 {% block controls %}
@@ -14,10 +15,18 @@
     <style>
         .config_line {
             text-decoration: none !important;
+            border-bottom: none !important;
             float:left;
             clear:left;
         }
+        pre {
+            border-bottom: none !important;
+        }
+        .second-col {
+            width: 70%;
+        }
     </style>
+<a name="ORIGINAL"></a>
     <div class="row">
         <div class="col col-md-4">
             <div class="card">
@@ -89,4 +98,218 @@
             {% endfor %}
         </div>
     </div>
+
+    <a name="NEW"></a>
+    <style>
+        .config_line {
+            text-decoration: none !important;
+            border-bottom: none !important;
+            float: left;
+            clear: left;
+        }
+    </style>
+
+    <div class="row">
+        <div class="col col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Details</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-fixed" id="tableTaskDetails">
+                        <tbody id="tableTaskResultBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Result</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-fixed" id="tableTaskResult">
+                        <tbody id="tableTaskResultBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col col-md-8">
+            <div id="logGroups"></div>
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script>
+
+    // Declare variables
+    let baseurl = "/api/plugins/celery/result/";
+    let latestLogTimestamp = "";
+    let lastStatus = "unknown";
+    let taskDetailsStatusColours = {
+        'pending': 'text-primary',
+        'running': 'text-cyan',
+        'completed': 'text-success',
+        'errored': 'text-danger',
+        'failed': 'text-danger'
+    };
+
+    let taskLogLevelColours = {
+        "default": "text-gray",
+        "success": "text-green",
+        "info": "text-cyan",
+        "warning": "text-yellow",
+        "failure": "text-red",
+        "0": "text-gray",
+        "10": "text-gray",
+        "20": "text-cyan",
+        "25": "text-green",
+        "30": "text-yellow",
+        "40": "text-yellow",
+        "50": "text-red"
+    };
+
+    let restartTimer = {
+        "unknown": true,
+        "pending": true,
+        "running": true,
+        "completed": false,
+        "errored": false,
+        "failed": false,
+    }
+
+    function generateTaskDetailsMarkup(data) {
+        let detailsCreated = new Date(data.created).toUTCString();
+        let detailsCompleted = data.completed ? new Date(data.completed).toUTCString() : "";
+        let statusCapitalized = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+
+        let detailsMarkup = `
+            <tr>
+                <th>User</th>
+                <td class="second-col">${data.user}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td class="${taskDetailsStatusColours[data.status]} second-col">${statusCapitalized}</td>
+            </tr>
+            <tr>
+                <th>Created</th>
+                <td class="second-col">${detailsCreated}</td>
+            </tr>
+            <tr>
+                <th>Completed</th>
+                <td class="second-col">${detailsCompleted}</td>
+            </tr>`;
+
+        return detailsMarkup;
+    }
+
+    function generateResultMarkup(result) {
+        let resultMarkup = '';
+
+        for (const [device, deviceResult] of Object.entries(result)) {
+            let deviceError = deviceResult.error !== null ? deviceResult.error.trim() : 'Success';
+            let errorColorClass = deviceResult.status ? 'text-success' : 'text-danger';
+
+            resultMarkup += `
+                <tr>
+                    <th>${device}</th>
+                    <td class="${errorColorClass} second-col">${deviceError}</td>
+                </tr>
+            `;
+            }
+
+        return resultMarkup;
+    }
+
+    function updateTaskLog(logGroups) {
+        for (const [group, logs] of Object.entries(logGroups)) {
+            let existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+
+            if (!existingCard) {
+                let logGroupMarkup = `
+                    <div class="card" data-group="${group}">
+                        <div class="card-header">
+                            <h3 class="card-title">${group}</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-fixed">
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                document.getElementById('logGroups').innerHTML += logGroupMarkup;
+                existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+            }
+
+            let existingTbody = existingCard.querySelector('tbody');
+
+            logs.forEach(log => {
+                let newRow = document.createElement('tr');
+                let newCell = document.createElement('td');
+                newCell.className = taskLogLevelColours[log.log_level] + " config_line";
+                newCell.textContent = log.message.replace(/</g, '').replace(/>/g, '');
+                newRow.appendChild(newCell);
+                existingTbody.appendChild(newRow);
+            });
+        }
+    }
+
+    function groupLogs(logs) {
+        let logGroups = {};
+        logs.forEach(log => {
+            if (!logGroups.hasOwnProperty(log.grouping)) {
+                logGroups[log.grouping] = [];
+            }
+            logGroups[log.grouping].push(log);
+        });
+        return logGroups;
+    }
+
+    // Start when ready
+    document.addEventListener("DOMContentLoaded", function() {
+        var jobResultId = "{{ object.id }}";
+        reloadTable(jobResultId);
+    });
+
+    function reloadTable(jobResultId, latest) {
+        var url = baseurl + jobResultId + "/?logs_after=" + latestLogTimestamp;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+
+                let $showTaskDetails = document.getElementById('tableTaskDetails').getElementsByTagName('tbody')[0];
+
+                // Task Details
+                let detailsMarkup = generateTaskDetailsMarkup(data);
+                $showTaskDetails.innerHTML = detailsMarkup;
+
+                // Task Result
+                if (data.result) {
+                    let $showTaskResult = document.getElementById('tableTaskResult').getElementsByTagName('tbody')[0];
+                    let resultMarkup = generateResultMarkup(data.result);
+                    $showTaskResult.innerHTML = resultMarkup;
+                }
+
+                // Task Log
+                if (data.logs && data.logs.length > 0) {
+                    let logGroups = groupLogs(data.logs);
+                    updateTaskLog(logGroups);
+                }
+
+                // Latest state
+                if (data.logs && data.logs.length > 0) {
+                    latestLogTimestamp = data.logs[data.logs.length - 1].created;
+                }
+                lastStatus = data.status;
+
+                // Restart timer as required
+                if (restartTimer[lastStatus]) {
+                    setTimeout(function () { reloadTable(jobResultId, latest); }, 1000);
+                }
+        });
+    }
+
+</script>
+
+
 {% endblock content %}

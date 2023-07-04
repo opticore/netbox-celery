@@ -143,7 +143,10 @@ class CeleryResult(NetBoxModel):
 class CeleryLogEntry(models.Model):
     """Stores each log entry for the CeleryResult."""
 
+    objects = RestrictedQuerySet.as_manager()
+
     job_result = models.ForeignKey(CeleryResult, on_delete=models.CASCADE, related_name="logs")
+
     log_level = models.CharField(
         max_length=32,
         choices=LogLevelIntegerChoices,

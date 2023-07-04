@@ -14,7 +14,7 @@ class ExamplePlugin(PluginConfig):
     author = "OpticoreIT"
     author_email = "info@opticoreit.com"
     description = "Celery job management for Netbox."
-    base_url = "celery"
+    base_url = "example"
 
 
 config = ExamplePlugin  # pylint: disable=invalid-name
