@@ -49,7 +49,7 @@ class CeleryBaseTask(Task):
             self.task_obj.status = CeleryResultStatusChoices.STATUS_FAILED
             self.task_obj.completed = datetime.now()
             for line in einfo.traceback.splitlines():
-                self.log(logging.ERROR, str(line))
+                self.log(str(line), logging.ERROR)
             self.task_obj.save()
 
     def get_result_obj(self, primary_key):
