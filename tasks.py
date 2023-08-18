@@ -5,7 +5,7 @@ from distutils.util import strtobool
 from invoke import Collection, task as invoke_task
 
 
-NETBOX_VERSION = "v3.4.4"
+NETBOX_VERSION = "v3.5.4"
 
 namespace = Collection("netbox")
 namespace.configure(
