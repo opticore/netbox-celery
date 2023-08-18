@@ -145,7 +145,7 @@ class CeleryLogEntry(models.Model):
 
     job_result = models.ForeignKey(CeleryResult, on_delete=models.CASCADE, related_name="logs")
     log_level = models.CharField(
-        max_length=32,
+        max_length=256,
         choices=LogLevelIntegerChoices,
         default=LogLevelIntegerChoices.LOG_DEFAULT,
         db_index=True,
