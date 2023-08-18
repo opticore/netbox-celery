@@ -109,7 +109,7 @@ class CeleryResult(NetBoxModel):
             celery_result.save()
         return celery_result
 
-    def log(self, level_choice, message, grouping="main"):
+    def log(self, message, level_choice, grouping="main"):
         """Log message."""
         CeleryLogEntry.objects.create(
             job_result=self,
