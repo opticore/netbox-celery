@@ -121,23 +121,23 @@ class CeleryResult(NetBoxModel):
 
     def log_debug(self, message, grouping="main"):
         """Log info message."""
-        self.log(LogLevelIntegerChoices.LOG_DEBUG, message, grouping)
+        self.log(message, LogLevelIntegerChoices.LOG_DEBUG, grouping)
 
     def log_info(self, message, grouping="main"):
         """Log info message."""
-        self.log(LogLevelIntegerChoices.LOG_INFO, message, grouping)
+        self.log(message, LogLevelIntegerChoices.LOG_INFO, grouping)
 
     def log_success(self, message, grouping="main"):
         """Log success message."""
-        self.log(LogLevelIntegerChoices.LOG_SUCCESS, message, grouping)
+        self.log(message, LogLevelIntegerChoices.LOG_SUCCESS, grouping)
 
     def log_warning(self, message, grouping="main"):
         """Log warning message."""
-        self.log(LogLevelIntegerChoices.LOG_WARNING, message, grouping)
+        self.log(message, LogLevelIntegerChoices.LOG_WARNING, grouping)
 
     def log_failure(self, message, grouping="main"):
         """Log failure message."""
-        self.log(LogLevelIntegerChoices.LOG_FAILURE, message, grouping)
+        self.log(message, LogLevelIntegerChoices.LOG_FAILURE, grouping)
 
 
 class CeleryLogEntry(models.Model):
