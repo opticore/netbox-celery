@@ -145,26 +145,26 @@
     let latestLogTimestamp = "";
     let lastStatus = "unknown";
     let taskDetailsStatusColours = {
-        'pending': 'text-primary',
-        'running': 'text-cyan',
+        'pending': 'text-info',
+        'running': 'text-primary',
         'completed': 'text-success',
-        'errored': 'text-danger',
+        'errored': 'text-warning',
         'failed': 'text-danger'
     };
-
+    
     let taskLogLevelColours = {
-        "default": "text-gray",
-        "success": "text-green",
-        "info": "text-cyan",
-        "warning": "text-yellow",
-        "failure": "text-red",
-        "0": "text-gray",
-        "10": "text-gray",
-        "20": "text-cyan",
-        "25": "text-green",
-        "30": "text-yellow",
-        "40": "text-yellow",
-        "50": "text-red"
+        "default": "text-muted",
+        "success": "text-success",
+        "info": "text-info",
+        "warning": "text-warning",
+        "failure": "text-danger",
+        "0": "text-muted",
+        "10": "text-muted",
+        "20": "text-info",
+        "25": "text-success",
+        "30": "text-warning",
+        "40": "text-warning",
+        "50": "text-danger"
     };
 
     let restartTimer = {
