@@ -243,13 +243,23 @@
 
             let existingTbody = existingCard.querySelector('tbody');
 
+            let delay = 0;
+            const interval = 400;
+        
             logs.forEach(log => {
                 let newRow = document.createElement('tr');
                 let newCell = document.createElement('td');
                 newCell.className = taskLogLevelColours[log.log_level] + " config_line";
                 newCell.textContent = log.message.replace(/</g, '').replace(/>/g, '');
                 newRow.appendChild(newCell);
+                newRow.style.display = "none";
                 existingTbody.appendChild(newRow);
+        
+                setTimeout(() => {
+                    $(newRow).fadeIn(400);
+                }, delay);
+        
+                delay += interval;
             });
         }
     }
@@ -277,17 +287,25 @@
             .then(response => response.json())
             .then(data => {
 
-                let $showTaskDetails = document.getElementById('tableTaskDetails').getElementsByTagName('tbody')[0];
-
                 // Task Details
+                let $showTaskDetails = document.getElementById('tableTaskDetails').getElementsByTagName('tbody')[0];
                 let detailsMarkup = generateTaskDetailsMarkup(data);
-                $showTaskDetails.innerHTML = detailsMarkup;
+                $showTaskDetails.innerHTML = detailsMarkup;                
+                if (lastStatus !== data.status) {
+                    let $statusCell = $('#tableTaskDetails').find('td:contains("' + lastStatus.charAt(0).toUpperCase() + lastStatus.slice(1) + '")');
+                    $statusCell.fadeOut(400, function() {
+                        let newStatus = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                        $statusCell.text(newStatus);
+                        $statusCell.removeClass(Object.values(taskDetailsStatusColours).join(' ')).addClass(taskDetailsStatusColours[data.status]);
+                        $statusCell.fadeIn(400);
+                    });
+                } 
 
                 // Task Result
                 if (data.result) {
-                    let $showTaskResult = document.getElementById('tableTaskResult').getElementsByTagName('tbody')[0];
+                    let $showTaskResult = $('#tableTaskResult tbody');
                     let resultMarkup = generateResultMarkup(data.result);
-                    $showTaskResult.innerHTML = resultMarkup;
+                    $showTaskResult.hide().html(resultMarkup).fadeIn('slow');
                 }
 
                 // Task Log
