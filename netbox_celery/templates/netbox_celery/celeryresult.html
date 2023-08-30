@@ -18,6 +18,7 @@
             border-bottom: none !important;
             float:left;
             clear:left;
+            color: white !important;
         }
         pre {
             border-bottom: none !important;
@@ -176,6 +177,7 @@
         "failed": false,
     }
 
+    // Generate Task Details Markup
     function generateTaskDetailsMarkup(data) {
         let detailsCreated = new Date(data.created).toUTCString();
         let detailsCompleted = data.completed ? new Date(data.completed).toUTCString() : "";
@@ -202,6 +204,7 @@
         return detailsMarkup;
     }
 
+    // Generate Results Markup
     function generateResultMarkup(result) {
         let resultMarkup = '';
 
@@ -220,50 +223,63 @@
         return resultMarkup;
     }
 
+    // Update Task Log
     function updateTaskLog(logGroups) {
-        for (const [group, logs] of Object.entries(logGroups)) {
-            let existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
-
-            if (!existingCard) {
-                let logGroupMarkup = `
-                    <div class="card" data-group="${group}">
-                        <div class="card-header">
-                            <h3 class="card-title">${group}</h3>
-                        </div>
-                        <div class="card-body">
-                            <table class="table table-fixed">
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>`;
-                document.getElementById('logGroups').innerHTML += logGroupMarkup;
-                existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
-            }
-
-            let existingTbody = existingCard.querySelector('tbody');
-
+        let logMain = logGroups["Main"];
+        let logDiv = document.getElementById('logGroups');
+    
+        function appendCard(group, container) {
+            let logGroupMarkup = `
+                <div class="card" data-group="${group}">
+                    <div class="card-header">
+                        <h3 class="card-title">${group}</h3>
+                    </div>
+                    <div class="card-body">
+                        <pre></pre>
+                    </div>
+                </div>`;
+            container.innerHTML += logGroupMarkup;
+        }
+    
+        // Update Card Body
+        function updateCardBody(card, logs) {
+            let existingPre = card.querySelector('pre');
             let delay = 0;
-            const interval = 400;
-        
+            const interval = 100;
+    
             logs.forEach(log => {
-                let newRow = document.createElement('tr');
-                let newCell = document.createElement('td');
-                newCell.className = taskLogLevelColours[log.log_level] + " config_line";
-                newCell.textContent = log.message.replace(/</g, '').replace(/>/g, '');
-                newRow.appendChild(newCell);
-                newRow.style.display = "none";
-                existingTbody.appendChild(newRow);
-        
                 setTimeout(() => {
-                    $(newRow).fadeIn(400);
+                    let newLine = document.createElement('a');
+                    newLine.className = "config_line " + taskLogLevelColours[log.log_level];
+                    newLine.textContent = log.message.replace(/</g, '').replace(/>/g, '');
+                    existingPre.appendChild(newLine);
+                    $(newLine).fadeIn(100);
                 }, delay);
-        
                 delay += interval;
             });
         }
-    }
-
+    
+        if (logMain) {
+            let mainCard = document.querySelector('#logGroups .card[data-group="Main"]');
+            if (!mainCard) {
+                appendCard("Main", logDiv);
+                mainCard = document.querySelector('#logGroups .card[data-group="Main"]');
+            }
+            updateCardBody(mainCard, logMain);
+            delete logGroups["Main"];
+        }
+    
+        for (const [group, logs] of Object.entries(logGroups)) {
+            let existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+            if (!existingCard) {
+                appendCard(group, logDiv);
+                existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+            }
+            updateCardBody(existingCard, logs);
+        }
+    }    
+    
+    // Group Logs
     function groupLogs(logs) {
         let logGroups = {};
         logs.forEach(log => {
@@ -281,6 +297,7 @@
         reloadTable(jobResultId);
     });
 
+    // Main loop
     function reloadTable(jobResultId, latest) {
         var url = baseurl + jobResultId + "/?logs_after=" + latestLogTimestamp;
         fetch(url)
