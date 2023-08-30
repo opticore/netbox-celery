@@ -28,11 +28,7 @@ class CeleryResultSerializer(NetBoxModelSerializer):
 
     def to_representation(self, instance):
         logs = self.context.get("logs")
-        logs_filtered = NestedCeleryLogEntrySerializer(
-            logs,
-            many=True,
-            read_only=True
-            ).data
+        logs_filtered = NestedCeleryLogEntrySerializer(logs, many=True, read_only=True).data
         representation = super().to_representation(instance)
         representation["logs"] = logs_filtered
         representation["user"] = instance.user.username
