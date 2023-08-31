@@ -23,7 +23,7 @@ class CeleryResultTestCase(
     def setUpTestData(cls):
         """Create test data."""
 
-        cls.celeryuser = User.objects.create_user(username='celeryuser', password='testpass')
+        cls.celeryuser = User.objects.create_user(username="celeryuser", password="testpass")
 
         CeleryResult.objects.bulk_create(
             [
