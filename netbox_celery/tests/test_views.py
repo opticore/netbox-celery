@@ -2,6 +2,7 @@
 import uuid
 from netbox_celery.models import CeleryResult
 
+from users.models import User
 from utilities.testing import ViewTestCases, create_tags
 
 
@@ -21,11 +22,26 @@ class CeleryResultTestCase(
     @classmethod
     def setUpTestData(cls):
         """Create test data."""
+
+        cls.celeryuser = User.objects.create_user(username='celeryuser', password='testpass')
+
         CeleryResult.objects.bulk_create(
             [
-                CeleryResult(task_id=uuid.uuid4(), status="SUCCESS"),
-                CeleryResult(task_id=uuid.uuid4(), status="SUCCESS"),
-                CeleryResult(task_id=uuid.uuid4(), status="SUCCESS"),
+                CeleryResult(
+                    task_id=uuid.uuid4(),
+                    status="SUCCESS",
+                    user=cls.celeryuser,
+                ),
+                CeleryResult(
+                    task_id=uuid.uuid4(),
+                    status="SUCCESS",
+                    user=cls.celeryuser,
+                ),
+                CeleryResult(
+                    task_id=uuid.uuid4(),
+                    status="SUCCESS",
+                    user=cls.celeryuser,
+                ),
             ]
         )
 
@@ -43,7 +59,3 @@ class CeleryResultTestCase(
             f"{uuid.uuid4()},SUCCESS",
             f"{uuid.uuid4()},SUCCESS",
         )
-
-        cls.bulk_edit_data = {
-            "status": "SUCCESS",
-        }
