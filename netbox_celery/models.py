@@ -109,7 +109,7 @@ class CeleryResult(NetBoxModel):
             celery_result.save()
         return celery_result
 
-    def log(self, message, level_choice, grouping="main"):
+    def log(self, level_choice, message, grouping="main"):
         """Log message."""
         CeleryLogEntry.objects.create(
             job_result=self,
@@ -121,34 +121,31 @@ class CeleryResult(NetBoxModel):
 
     def log_debug(self, message, grouping="main"):
         """Log info message."""
-        self.log(message, LogLevelIntegerChoices.LOG_DEBUG, grouping)
+        self.log(LogLevelIntegerChoices.LOG_DEBUG, message, grouping)
 
     def log_info(self, message, grouping="main"):
         """Log info message."""
-        self.log(message, LogLevelIntegerChoices.LOG_INFO, grouping)
+        self.log(LogLevelIntegerChoices.LOG_INFO, message, grouping)
 
     def log_success(self, message, grouping="main"):
         """Log success message."""
-        self.log(message, LogLevelIntegerChoices.LOG_SUCCESS, grouping)
+        self.log(LogLevelIntegerChoices.LOG_SUCCESS, message, grouping)
 
     def log_warning(self, message, grouping="main"):
         """Log warning message."""
-        self.log(message, LogLevelIntegerChoices.LOG_WARNING, grouping)
+        self.log(LogLevelIntegerChoices.LOG_WARNING, message, grouping)
 
     def log_failure(self, message, grouping="main"):
         """Log failure message."""
-        self.log(message, LogLevelIntegerChoices.LOG_FAILURE, grouping)
+        self.log(LogLevelIntegerChoices.LOG_FAILURE, message, grouping)
 
 
 class CeleryLogEntry(models.Model):
     """Stores each log entry for the CeleryResult."""
 
-    objects = RestrictedQuerySet.as_manager()
-
     job_result = models.ForeignKey(CeleryResult, on_delete=models.CASCADE, related_name="logs")
-
     log_level = models.CharField(
-        max_length=256,
+        max_length=32,
         choices=LogLevelIntegerChoices,
         default=LogLevelIntegerChoices.LOG_DEFAULT,
         db_index=True,
