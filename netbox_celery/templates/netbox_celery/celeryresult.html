@@ -1,6 +1,6 @@
 {% extends 'generic/object.html' %}
 {% load helpers %}
-
+{% load static %}
 
 {% block controls %}
     <div class="controls">
@@ -14,10 +14,19 @@
     <style>
         .config_line {
             text-decoration: none !important;
+            border-bottom: none !important;
             float:left;
             clear:left;
+            color: white !important;
+        }
+        pre {
+            border-bottom: none !important;
+        }
+        .second-col {
+            width: 70%;
         }
     </style>
+
     <div class="row">
         <div class="col col-md-4">
             <div class="card">
@@ -25,31 +34,8 @@
                     <h3 class="card-title">Details</h3>
                 </div>
                 <div class="card-body">
-                    <table class="table table-hover attr-table">
-                        <tr>
-                            <th>User</th>
-                            <td>{{ object.user }}</td>
-                        </tr>
-                        <tr>
-                            <th>Status</th>
-                            <td class="{% if object.status == "pending" %}text-primary">Pending{% elif object.status == "errored" or object.status == "failed" %}text-danger">Failed{% elif object.status == "completed" %}text-success">Completed{% else %}text-primary">Pending{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <th>Created</th>
-                            <td>{{ object.created }}</td>
-                        </tr>
-                        <tr>
-                            <th>Completed</th>
-                            <td>{{ object.completed }}</td>
-                        </tr>
-                        <tr>
-                            <th>Arguments</th>
-                            <td><pre>{{ object.args|json }}</pre></td>
-                        </tr>
-                        <tr>
-                            <th>Key Word Arguments</th>
-                            <td><pre>{{ object.kwargs|json }}</pre></td>
-                        </tr>
+                    <table class="table table-fixed" id="tableTaskDetails">
+                        <tbody id="tableTaskResultBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -58,35 +44,221 @@
                     <h3 class="card-title">Result</h3>
                 </div>
                 <div class="card-body">
-                    <pre id='json_result'>{{ object.result|json }}</pre>
+                    <table class="table table-fixed" id="tableTaskResult">
+                        <tbody id="tableTaskResultBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
         <div class="col col-md-8">
-            {% if log_main %}
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Main</h3>
-                    </div>
-                    <div class="card-body">
-                        <pre>
-                            {% for log in log_main %}<a class="config_line">{{ log }}</a>{% endfor %}
-                        </pre>
-                    </div>
-                </div>
-            {% endif %}
-            {% for group_name, logs in log_groups.items %}
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">{{ group_name }}</h3>
-                    </div>
-                    <div class="card-body">
-                        <pre>
-                            {% for log in logs %}<a class="config_line">{{ log }}</a>{% endfor %}
-                        </pre>
-                    </div>
-                </div>
-            {% endfor %}
+            <div id="logGroups"></div>
         </div>
     </div>
+
+<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script>
+
+    // Declare variables
+    let baseurl = "/api/plugins/celery/result/";
+    let latestLogTimestamp = "";
+    let lastStatus = "unknown";
+    let taskDetailsStatusColours = {
+        'pending': 'text-info',
+        'running': 'text-primary',
+        'completed': 'text-success',
+        'errored': 'text-warning',
+        'failed': 'text-danger'
+    };   
+    let taskLogLevelColours = {
+        "default": "text-muted",
+        "success": "text-success",
+        "info": "text-info",
+        "warning": "text-warning",
+        "failure": "text-danger",
+        "0": "text-muted",
+        "10": "text-muted",
+        "20": "text-info",
+        "25": "text-success",
+        "30": "text-warning",
+        "40": "text-warning",
+        "50": "text-danger"
+    };
+    let restartTimer = {
+        "unknown": true,
+        "pending": true,
+        "running": true,
+        "completed": false,
+        "errored": false,
+        "failed": false,
+    }
+
+    // Generate Task Details Markup
+    function generateTaskDetailsMarkup(data) {
+        let detailsCreated = new Date(data.created).toUTCString();
+        let detailsCompleted = data.completed ? new Date(data.completed).toUTCString() : "";
+        let statusCapitalized = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+
+        let detailsMarkup = `
+            <tr>
+                <th>User</th>
+                <td class="second-col">${data.user}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td class="${taskDetailsStatusColours[data.status]} second-col">${statusCapitalized}</td>
+            </tr>
+            <tr>
+                <th>Created</th>
+                <td class="second-col">${detailsCreated}</td>
+            </tr>
+            <tr>
+                <th>Completed</th>
+                <td class="second-col">${detailsCompleted}</td>
+            </tr>`;
+
+        return detailsMarkup;
+    }
+
+    // Generate Results Markup
+    function generateResultMarkup(result) {
+        let resultMarkup = '';
+
+        for (const [device, deviceResult] of Object.entries(result)) {
+            let deviceError = deviceResult.error !== null ? deviceResult.error.trim() : 'Success';
+            let errorColorClass = deviceResult.status ? 'text-success' : 'text-danger';
+
+            resultMarkup += `
+                <tr>
+                    <th>${device}</th>
+                    <td class="${errorColorClass} second-col">${deviceError}</td>
+                </tr>
+            `;
+            }
+
+        return resultMarkup;
+    }
+
+    // Update Task Log
+    function updateTaskLog(logGroups) {
+        let logMain = logGroups["Main"];
+        let logDiv = document.getElementById('logGroups');
+    
+        function appendCard(group, container) {
+            let logGroupMarkup = `
+                <div class="card" data-group="${group}">
+                    <div class="card-header">
+                        <h3 class="card-title">${group}</h3>
+                    </div>
+                    <div class="card-body">
+                        <pre></pre>
+                    </div>
+                </div>`;
+            container.innerHTML += logGroupMarkup;
+        }
+    
+        // Update Card Body
+        function updateCardBody(card, logs) {
+            let existingPre = card.querySelector('pre');
+            let delay = 0;
+            const interval = 100;
+    
+            logs.forEach(log => {
+                setTimeout(() => {
+                    let newLine = document.createElement('a');
+                    newLine.className = "config_line " + taskLogLevelColours[log.log_level];
+                    newLine.textContent = log.message.replace(/</g, '').replace(/>/g, '');
+                    existingPre.appendChild(newLine);
+                    $(newLine).fadeIn(100);
+                }, delay);
+                delay += interval;
+            });
+        }
+    
+        if (logMain) {
+            let mainCard = document.querySelector('#logGroups .card[data-group="Main"]');
+            if (!mainCard) {
+                appendCard("Main", logDiv);
+                mainCard = document.querySelector('#logGroups .card[data-group="Main"]');
+            }
+            updateCardBody(mainCard, logMain);
+            delete logGroups["Main"];
+        }
+    
+        for (const [group, logs] of Object.entries(logGroups)) {
+            let existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+            if (!existingCard) {
+                appendCard(group, logDiv);
+                existingCard = document.querySelector(`#logGroups .card[data-group="${group}"]`);
+            }
+            updateCardBody(existingCard, logs);
+        }
+    }    
+    
+    // Group Logs
+    function groupLogs(logs) {
+        let logGroups = {};
+        logs.forEach(log => {
+            if (!logGroups.hasOwnProperty(log.grouping)) {
+                logGroups[log.grouping] = [];
+            }
+            logGroups[log.grouping].push(log);
+        });
+        return logGroups;
+    }
+
+    // Start when ready
+    document.addEventListener("DOMContentLoaded", function() {
+        var jobResultId = "{{ object.id }}";
+        reloadTable(jobResultId);
+    });
+
+    // Main loop
+    function reloadTable(jobResultId, latest) {
+        var url = baseurl + jobResultId + "/?logs_after=" + latestLogTimestamp;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+
+                // Task Details
+                let $showTaskDetails = document.getElementById('tableTaskDetails').getElementsByTagName('tbody')[0];
+                let detailsMarkup = generateTaskDetailsMarkup(data);
+                $showTaskDetails.innerHTML = detailsMarkup;                
+                if (lastStatus !== data.status) {
+                    let $statusCell = $('#tableTaskDetails').find('td:contains("' + lastStatus.charAt(0).toUpperCase() + lastStatus.slice(1) + '")');
+                    $statusCell.fadeOut(400, function() {
+                        let newStatus = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                        $statusCell.text(newStatus);
+                        $statusCell.removeClass(Object.values(taskDetailsStatusColours).join(' ')).addClass(taskDetailsStatusColours[data.status]);
+                        $statusCell.fadeIn(400);
+                    });
+                } 
+
+                // Task Result
+                if (data.result) {
+                    let $showTaskResult = $('#tableTaskResult tbody');
+                    let resultMarkup = generateResultMarkup(data.result);
+                    $showTaskResult.hide().html(resultMarkup).fadeIn('slow');
+                }
+
+                // Task Log
+                if (data.logs && data.logs.length > 0) {
+                    let logGroups = groupLogs(data.logs);
+                    updateTaskLog(logGroups);
+                }
+
+                // Latest state
+                if (data.logs && data.logs.length > 0) {
+                    latestLogTimestamp = data.logs[data.logs.length - 1].created;
+                }
+                lastStatus = data.status;
+
+                // Restart timer as required
+                if (restartTimer[lastStatus]) {
+                    setTimeout(function () { reloadTable(jobResultId, latest); }, 1000);
+                }
+        });
+    }
+
+</script>
+
 {% endblock content %}

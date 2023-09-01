@@ -1,6 +1,7 @@
 """Test the NetBox Celery API."""
 import uuid
 
+from django.contrib.auth.models import User
 from django.urls import reverse
 from utilities.testing import APITestCase, APIViewTestCases
 
@@ -33,6 +34,7 @@ class CeleryResultTest(
             "kwargs",
             "job_kwargs",
             "result",
+            "logs",
         ]
     )
     bulk_update_data = {
@@ -52,25 +54,25 @@ class CeleryResultTest(
     @classmethod
     def setUpTestData(cls):
         """Create test data."""
+
+        cls.celeryuser = User.objects.create_user(username="celeryuser")
+
         CeleryResult.objects.bulk_create(
             [
-                CeleryResult(task_id=uuid.uuid4(), status="SUCCESS"),
-                CeleryResult(task_id=uuid.uuid4(), status="SUCCESS"),
-                CeleryResult(task_id=uuid.uuid4(), status="SUCCESS"),
+                CeleryResult(
+                    task_id=uuid.uuid4(),
+                    status="SUCCESS",
+                    user=cls.celeryuser,
+                ),
+                CeleryResult(
+                    task_id=uuid.uuid4(),
+                    status="SUCCESS",
+                    user=cls.celeryuser,
+                ),
+                CeleryResult(
+                    task_id=uuid.uuid4(),
+                    status="SUCCESS",
+                    user=cls.celeryuser,
+                ),
             ]
         )
-
-        cls.create_data = [
-            {
-                "task_id": uuid.uuid4(),
-                "status": "SUCCESS",
-            },
-            {
-                "task_id": uuid.uuid4(),
-                "status": "SUCCESS",
-            },
-            {
-                "task_id": uuid.uuid4(),
-                "status": "SUCCESS",
-            },
-        ]
